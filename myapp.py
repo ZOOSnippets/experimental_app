@@ -2,6 +2,7 @@ import sys
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
+from PyPDF2 import PdfFileReader, PdfFileWriter
 
 
 class MainWindow(qtw.QMainWindow):
@@ -15,43 +16,188 @@ class MainWindow(qtw.QMainWindow):
 
     def initUI(self):
         ## Main UI code goes here
-        self.label = qtw.QLabel(self)
-        self.label.setText("This is a PyQt5 App")
+        self.label_title = qtw.QLabel(self)
+        self.label_title.setText("This is a PyQt5 PDF-merger App")
+        self.label_title.setAlignment(qtc.Qt.AlignCenter)
 
-        self.button1 = qtw.QPushButton(self)
-        self.button1.setText("Click Me")
-        self.button1.clicked.connect(self.clickme)
+        self.label_empty = qtw.QLabel(self)
+
+        self.button_add = qtw.QPushButton(self)
+        self.button_add.setText("Add PDF File")
+        self.button_add.clicked.connect(self.open_file)
         
-        self.button2 = qtw.QPushButton(self)
-        self.button2.setText("Open File")
-        self.button2.clicked.connect(self.open_file)
-
+        self.button_remove = qtw.QPushButton(self)
+        self.button_remove.setText("Remove PDF File")
+        self.button_remove.clicked.connect(self.remove_item)
+        
+        self.label_listbox = qtw.QLabel(self)
+        self.label_listbox.setText("List of PDF Files")
         self.listbox = qtw.QListWidget(self)
-        self.listbox.setGeometry(0,0,100,200)
+        self.listbox.setFixedWidth(200)
+        self.listbox.setFixedHeight(100)
+        #self.listbox.setDragDropMode(qtw.QAbstractItemView.InternalMove)
+        self.listbox.setSelectionMode(self.listbox.SingleSelection)
+        self.listbox.itemClicked.connect(self.display_item)
+
+        self.label_settings = qtw.QLabel(self)
+        self.label_settings.setText("Setting for PDF File")
+
+        self.label_filename = qtw.QLabel(self)
+        self.label_filename.setFixedWidth(60)
+        self.label_filename.setText("File Name:")
+
+        self.label_pages = qtw.QLabel(self)
+        self.label_pages.setFixedWidth(60)
+        self.label_pages.setText("Pages:")
+
+        self.label_start = qtw.QLabel(self)
+        self.label_start.setFixedWidth(60)
+        self.label_start.setText("Start page:")
+
+        self.label_end = qtw.QLabel(self)
+        self.label_end.setFixedWidth(60)
+        self.label_end.setText("End page:")
+
+        self.label_filename_text = qtw.QLabel(self)
+        self.label_filename_text.setMinimumWidth(100)
+
+        self.label_pages_text = qtw.QLabel(self)
+
+        self.label_start_text = qtw.QLineEdit(self)
+        self.label_start_text.setValidator(qtg.QIntValidator(self.label_start_text))
+        self.label_start_text.editingFinished.connect(self.edit_start)
+
+        self.label_end_text = qtw.QLineEdit(self)
+        self.label_end_text.setValidator(qtg.QIntValidator(self.label_end_text))
+        self.label_end_text.editingFinished.connect(self.edit_end)
+
+        self.button_save = qtw.QPushButton(self)
+        self.button_save.setText("Save as new PDF File")
+        self.button_save.clicked.connect(self.open_file)
+
         self.createLayout()
         ## End main UI code
 
     def createLayout(self):
-        layout1 = qtw.QGridLayout()
-        layout1.addWidget(self.label,0,0)
-        layout1.addWidget(self.listbox,1,1)
-        layout1.addWidget(self.button1,1,0)
-        layout1.addWidget(self.button2,2,0)
-        
+        topLayout = qtw.QHBoxLayout()
+        topLayout.addWidget(self.label_title)
+
+        layout1 = qtw.QVBoxLayout()
+        layout1.addWidget(self.label_empty)
+        layout1.addWidget(self.button_add)
+        layout1.addWidget(self.button_remove)
+        layout1.addStretch(20)
+        layout2 = qtw.QVBoxLayout()
+        layout2.addWidget(self.label_listbox)
+        layout2.addWidget(self.listbox)
+                
+        layout3A = qtw.QHBoxLayout()
+        layout3A.addWidget(self.label_settings)
+        layout3B = qtw.QHBoxLayout()
+        layout3B.addWidget(self.label_filename)
+        layout3B.addWidget(self.label_filename_text)
+        layout3C = qtw.QHBoxLayout()
+        layout3C.addWidget(self.label_pages)
+        layout3C.addWidget(self.label_pages_text)
+        layout3D = qtw.QHBoxLayout()
+        layout3D.addWidget(self.label_start)
+        layout3D.addWidget(self.label_start_text)
+        layout3E = qtw.QHBoxLayout()
+        layout3E.addWidget(self.label_end)
+        layout3E.addWidget(self.label_end_text)
+     
+        layout3 = qtw.QVBoxLayout()
+        layout3.addLayout(layout3A)
+        layout3.addLayout(layout3B)
+        layout3.addLayout(layout3C)
+        layout3.addLayout(layout3D)
+        layout3.addLayout(layout3E)
+        layout3.addStretch(20)
+
+        middleLayout = qtw.QHBoxLayout()
+        middleLayout.addLayout(layout1)
+        middleLayout.addLayout(layout2)
+        middleLayout.addLayout(layout3)
+
+        bottomLayout = qtw.QHBoxLayout()
+        bottomLayout.addWidget(self.button_save)
+
+        mainLayout = qtw.QVBoxLayout()
+        mainLayout.addLayout(topLayout)
+        mainLayout.addLayout(middleLayout)
+        mainLayout.addLayout(bottomLayout)
+
         widget = qtw.QWidget()
-        widget.setLayout(layout1)
+        widget.setLayout(mainLayout)
         self.setCentralWidget(widget)
 
     def open_file(self):
-        filename = qtw.QFileDialog.getOpenFileName(self, 'Open File', './', "PDF Files (*.pdf)")
-        
-        if filename[0]:
-            print(filename[0])
+        self.filename = qtw.QFileDialog.getOpenFileName(self, 'Open File', './', "PDF Files (*.pdf)")
+        self.pdf = PDF_Doc(self.filename)
+        pdf_list.append(self.pdf)
+        self.listbox.addItem(self.pdf.display)
 
-    def clickme(self):
-        self.label.setText("Button pressed")
+    def display_item(self, item):
+        self.index = self.listbox.row(item)
+        self.label_filename_text.setText(str(pdf_list[self.index].display))
+        self.label_pages_text.setText(str(pdf_list[self.index].pages))
+        self.label_start_text.setText(str(pdf_list[self.index].start))
+        self.label_end_text.setText(str(pdf_list[self.index].end))
+
+    def edit_start(self):
+        if self.label_start_text.text() > self.label_end_text.text():
+            title = "Oops!"
+            message = "Number exceeds last page number!"
+            self.show_popup(title, message)
+            self.label_start_text.setText(str(pdf_list[self.index].start))
+        else:
+            pdf_list[self.index].start = self.label_start_text.text()
+
+    def edit_end(self):
+        if self.label_end_text.text() > self.label_pages_text.text():
+            title = "Oops!"
+            message = "Number exceeds the total page numbers!"
+            self.show_popup(title, message)
+            self.label_end_text.setText(str(pdf_list[self.index].end))
+        else:
+            pdf_list[self.index].end = self.label_end_text.text()
+
+    def show_popup(self, title, message):
+        msg = qtw.QMessageBox()
+        msg.setWindowTitle(title)
+        msg.setText(message)
+
+        _ = msg.exec_()
+
+    def remove_item(self):
+        listItems=self.listbox.selectedItems()
+        if not listItems: return        
+        for item in listItems:            
+            index = self.listbox.row(item)
+            self.listbox.takeItem(self.listbox.row(item))
+            title = "Removed PDF File"
+            message = f"Removed PDF File: \'{item.text()}\'"
+            self.show_popup(title, message)
+            pdf_list.pop(index)
+
+
+class PDF_Doc():
+
+    def __init__(self, filename):
+        self.filename = filename
+        self.display = filename[0].split('/')[-1]
+        self.pdf = load_pdf(filename[0])
+        self.pages = self.pdf.getNumPages()
+        self.start = 1
+        self.end = self.pages
+
+def load_pdf(filename):
+    f = open(filename, 'rb')
+    return PdfFileReader(f)
+
 
 if __name__ == '__main__':
+    pdf_list = []
     app = qtw.QApplication(sys.argv)
     mw = MainWindow()
     sys.exit(app.exec_())
