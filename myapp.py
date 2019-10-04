@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
@@ -28,7 +29,7 @@ class MainWindow(qtw.QMainWindow):
         
         self.button_remove = qtw.QPushButton(self)
         self.button_remove.setText("Remove PDF File")
-        self.button_remove.clicked.connect(self.remove_item)
+        self.button_remove.clicked.connect(self.remove_file)
         
         self.label_listbox = qtw.QLabel(self)
         self.label_listbox.setText("List of PDF Files")
@@ -73,7 +74,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.button_save = qtw.QPushButton(self)
         self.button_save.setText("Save as new PDF File")
-        self.button_save.clicked.connect(self.open_file)
+        self.button_save.clicked.connect(self.save_file)
 
         self.createLayout()
         ## End main UI code
@@ -133,9 +134,10 @@ class MainWindow(qtw.QMainWindow):
 
     def open_file(self):
         self.filename = qtw.QFileDialog.getOpenFileName(self, 'Open File', './', "PDF Files (*.pdf)")
-        self.pdf = PDF_Doc(self.filename)
-        pdf_list.append(self.pdf)
-        self.listbox.addItem(self.pdf.display)
+        if self.filename[0]:
+            self.pdf = PDF_Doc(self.filename)
+            pdf_list.append(self.pdf)
+            self.listbox.addItem(self.pdf.display)
 
     def display_item(self, item):
         self.index = self.listbox.row(item)
@@ -154,7 +156,7 @@ class MainWindow(qtw.QMainWindow):
             pdf_list[self.index].start = self.label_start_text.text()
 
     def edit_end(self):
-        if self.label_end_text.text() > self.label_pages_text.text():
+        if int(self.label_end_text.text()) > int(self.label_pages_text.text()):
             title = "Oops!"
             message = "Number exceeds the total page numbers!"
             self.show_popup(title, message)
@@ -169,7 +171,19 @@ class MainWindow(qtw.QMainWindow):
 
         _ = msg.exec_()
 
-    def remove_item(self):
+    def save_file(self):
+        writer = PdfFileWriter()
+
+        output_filename = qtw.QFileDialog.getSaveFileName(self, 'Save File As', './', "PDF Files (*.pdf)")
+        if output_filename[0]:
+            print(output_filename[0])
+            with open(output_filename[0], 'wb') as f:
+                for doc in pdf_list:
+                    doc.add_to_writer(writer)
+                    
+                writer.write(f)
+
+    def remove_file(self):
         listItems=self.listbox.selectedItems()
         if not listItems: return        
         for item in listItems:            
@@ -190,6 +204,10 @@ class PDF_Doc():
         self.pages = self.pdf.getNumPages()
         self.start = 1
         self.end = self.pages
+
+    def add_to_writer(self, writer):
+        for i in range(int(self.start)-1, int(self.end)):
+            writer.addPage(self.pdf.getPage(i))
 
 def load_pdf(filename):
     f = open(filename, 'rb')
