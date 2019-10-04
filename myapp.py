@@ -11,14 +11,20 @@ class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         ## Title Main UI
-        self.setWindowTitle("My Awesome App!")
+        self.setWindowTitle("PDF Merger App")
+        self.setWindowIcon(qtg.QIcon("Pdf.ico"))
         self.initUI()
         self.show()
 
     def initUI(self):
         ## Main UI code goes here
+        boldfont = qtg.QFont()
+        boldfont.setBold(True)
+        boldfont.setPointSize(12)
+
         self.label_title = qtw.QLabel(self)
-        self.label_title.setText("This is a PyQt5 PDF-merger App")
+        self.label_title.setText("PyQt5 PDF Merger App")
+        self.label_title.setFont(boldfont)
         self.label_title.setAlignment(qtc.Qt.AlignCenter)
 
         self.label_empty = qtw.QLabel(self)
@@ -38,16 +44,20 @@ class MainWindow(qtw.QMainWindow):
         self.button_down.setText("Down")
         self.button_down.clicked.connect(self.file_down)
 
+        self.button_close = qtw.QPushButton(self)
+        self.button_close.setText("Close")
+        self.button_close.clicked.connect(self.app_close)
+
         self.label_listbox = qtw.QLabel(self)
         self.label_listbox.setText("List of PDF Files")
         self.listbox = qtw.QListWidget(self)
         self.listbox.setFixedWidth(200)
-        self.listbox.setFixedHeight(130)
+        self.listbox.setFixedHeight(140)
         self.listbox.setSelectionMode(self.listbox.SingleSelection)
         self.listbox.itemClicked.connect(self.display_item)
 
         self.label_settings = qtw.QLabel(self)
-        self.label_settings.setText("Setting for PDF File")
+        self.label_settings.setText("Settings for selected PDF File")
 
         self.label_filename = qtw.QLabel(self)
         self.label_filename.setFixedWidth(60)
@@ -95,6 +105,7 @@ class MainWindow(qtw.QMainWindow):
         layout1.addWidget(self.button_remove)
         layout1.addWidget(self.button_up)
         layout1.addWidget(self.button_down)
+        layout1.addWidget(self.button_close)
         layout1.addStretch(20)
         layout2 = qtw.QVBoxLayout()
         layout2.addWidget(self.label_listbox)
@@ -175,6 +186,7 @@ class MainWindow(qtw.QMainWindow):
     def show_popup(self, title, message):
         msg = qtw.QMessageBox()
         msg.setWindowTitle(title)
+        msg.setWindowIcon(qtg.QIcon("Pdf.ico"))
         msg.setText(message)
 
         _ = msg.exec_()
@@ -222,6 +234,9 @@ class MainWindow(qtw.QMainWindow):
             self.show_popup(title, message)
             pdf_list.pop(index)
 
+    def app_close(self):
+        quit()
+
 
 class PDF_Doc():
 
@@ -246,5 +261,6 @@ def load_pdf(filename):
 if __name__ == '__main__':
     pdf_list = []
     app = qtw.QApplication(sys.argv)
+    app.setStyle("Fusion")
     mw = MainWindow()
     sys.exit(app.exec_())
