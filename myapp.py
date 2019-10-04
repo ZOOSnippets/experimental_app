@@ -31,12 +31,18 @@ class MainWindow(qtw.QMainWindow):
         self.button_remove.setText("Remove PDF File")
         self.button_remove.clicked.connect(self.remove_file)
         
+        self.button_up = qtw.QPushButton(self)
+        self.button_up.setText("Up")
+        self.button_up.clicked.connect(self.file_up)
+        self.button_down = qtw.QPushButton(self)
+        self.button_down.setText("Down")
+        self.button_down.clicked.connect(self.file_down)
+
         self.label_listbox = qtw.QLabel(self)
         self.label_listbox.setText("List of PDF Files")
         self.listbox = qtw.QListWidget(self)
         self.listbox.setFixedWidth(200)
-        self.listbox.setFixedHeight(100)
-        #self.listbox.setDragDropMode(qtw.QAbstractItemView.InternalMove)
+        self.listbox.setFixedHeight(130)
         self.listbox.setSelectionMode(self.listbox.SingleSelection)
         self.listbox.itemClicked.connect(self.display_item)
 
@@ -87,6 +93,8 @@ class MainWindow(qtw.QMainWindow):
         layout1.addWidget(self.label_empty)
         layout1.addWidget(self.button_add)
         layout1.addWidget(self.button_remove)
+        layout1.addWidget(self.button_up)
+        layout1.addWidget(self.button_down)
         layout1.addStretch(20)
         layout2 = qtw.QVBoxLayout()
         layout2.addWidget(self.label_listbox)
@@ -183,6 +191,26 @@ class MainWindow(qtw.QMainWindow):
                     
                 writer.write(f)
 
+    def file_up(self):
+        row = self.listbox.currentRow()
+        if row >= 1:
+            pdf = pdf_list[row]
+            pdf_list.pop(row)
+            pdf_list.insert(row -1, pdf)
+            item = self.listbox.takeItem(row)
+            self.listbox.insertItem(row - 1, item)
+            self.listbox.setCurrentItem(item)
+
+    def file_down(self):
+        row = self.listbox.currentRow()
+        if row < self.listbox.count() - 1:
+            pdf = pdf_list[row]
+            pdf_list.pop(row)
+            pdf_list.insert(row+1, pdf)
+            item = self.listbox.takeItem(row)
+            self.listbox.insertItem(row + 1, item)
+            self.listbox.setCurrentItem(item)
+
     def remove_file(self):
         listItems=self.listbox.selectedItems()
         if not listItems: return        
@@ -208,6 +236,7 @@ class PDF_Doc():
     def add_to_writer(self, writer):
         for i in range(int(self.start)-1, int(self.end)):
             writer.addPage(self.pdf.getPage(i))
+
 
 def load_pdf(filename):
     f = open(filename, 'rb')
