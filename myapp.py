@@ -10,14 +10,14 @@ class MainWindow(qtw.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        ## Title Main UI
+        ## MainWindow UI
         self.setWindowTitle("PDF Merger App")
         self.setWindowIcon(qtg.QIcon("Pdf.ico"))
         self.initUI()
         self.show()
 
     def initUI(self):
-        ## Main UI code goes here
+        ## Main UI Widgets code
         boldfont = qtg.QFont()
         boldfont.setBold(True)
         boldfont.setPointSize(12)
@@ -50,11 +50,12 @@ class MainWindow(qtw.QMainWindow):
 
         self.label_listbox = qtw.QLabel(self)
         self.label_listbox.setText("List of PDF Files")
+        
         self.listbox = qtw.QListWidget(self)
         self.listbox.setFixedWidth(200)
         self.listbox.setFixedHeight(140)
         self.listbox.setSelectionMode(self.listbox.SingleSelection)
-        self.listbox.itemClicked.connect(self.display_item)
+        self.listbox.pressed.connect(self.display_item)
 
         self.label_settings = qtw.QLabel(self)
         self.label_settings.setText("Settings for selected PDF File")
@@ -93,9 +94,9 @@ class MainWindow(qtw.QMainWindow):
         self.button_save.clicked.connect(self.save_file)
 
         self.createLayout()
-        ## End main UI code
 
     def createLayout(self):
+        ## Create UI Layout
         topLayout = qtw.QHBoxLayout()
         topLayout.addWidget(self.label_title)
 
@@ -159,7 +160,7 @@ class MainWindow(qtw.QMainWindow):
             self.listbox.addItem(self.pdf.display)
 
     def display_item(self, item):
-        self.index = self.listbox.row(item)
+        self.index = self.listbox.currentRow()
         self.label_filename_text.setText(str(pdf_list[self.index].display))
         self.label_pages_text.setText(str(pdf_list[self.index].pages))
         self.label_start_text.setText(str(pdf_list[self.index].start))
@@ -196,12 +197,16 @@ class MainWindow(qtw.QMainWindow):
 
         output_filename = qtw.QFileDialog.getSaveFileName(self, 'Save File As', './', "PDF Files (*.pdf)")
         if output_filename[0]:
-            print(output_filename[0])
             with open(output_filename[0], 'wb') as f:
                 for doc in pdf_list:
                     doc.add_to_writer(writer)
                     
                 writer.write(f)
+                self.listbox.clear()
+                self.label_filename_text.clear()
+                self.label_pages_text.clear()
+                self.label_start_text.clear()
+                self.label_end_text.clear()
 
     def file_up(self):
         row = self.listbox.currentRow()
