@@ -9,6 +9,5 @@ Functionalities:
 
 Libraries used:
 - sys
-- os
 - PyQt5
 - PyPDF2
